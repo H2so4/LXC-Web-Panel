@@ -35,7 +35,7 @@ import platform
 import re
 import subprocess
 import time
-
+from commands import getoutput
 from io import StringIO
 
 try:
@@ -294,6 +294,10 @@ def get_container_settings(name):
     else:
         filename = '/var/lib/lxc/%s/config' % name
 
+    result = getoutput('lxc-info -n %s' % name)
+    container_info = dict(map(lambda y: y.replace(' ','').split(':'), result.split('\n')))
+    # Available keys = BlkIOuse, Name, KMemuse, IP, PID, RXbytes,TXbytes,
+    #   Memoryuse, State, Link, Totalbytes, CPUus
     if not file_exist(filename):
         return False
     config = configparser.SafeConfigParser()
@@ -328,7 +332,7 @@ def get_container_settings(name):
     except configparser.NoOptionError:
         cfg['arch'] = ''
     try:
-        cfg['ipv4'] = config.get('DEFAULT', cgroup['ipv4'])
+        cfg['ipv4'] = container_info.get('IP',' ')
     except configparser.NoOptionError:
         cfg['ipv4'] = ''
     try:
